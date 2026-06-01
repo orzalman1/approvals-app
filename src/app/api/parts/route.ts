@@ -9,17 +9,15 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get('q') ?? ''
   if (q.length < 1) return NextResponse.json({ parts: [] })
 
-  const parts = await prisma.part.findMany({
-    where: {
-      OR: [
-        { partName: { contains: q, mode: 'insensitive' } },
-        { partDes: { contains: q, mode: 'insensitive' } },
-      ],
-    },
-    orderBy: { partName: 'asc' },
-    take: 50,
-    select: { partName: true, partDes: true },
-  })
+  const search = `%${q.toUpperCase()}%`
+  const parts = await prisma.$queryRaw<{ partName: string; partDes: string | null }[]>`
+    SELECT "partName", "partDes"
+    FROM "Part"
+    WHERE UPPER("partName") LIKE ${search}
+       OR UPPER("partDes")  LIKE ${search}
+    ORDER BY "partName"
+    LIMIT 50
+  `
 
   return NextResponse.json({
     parts: parts.map(p => ({ name: p.partName, des: p.partDes ?? '' })),
