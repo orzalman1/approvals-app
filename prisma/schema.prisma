@@ -52,6 +52,13 @@ model RequestItem {
   notes         String?
 }
 
+model Part {
+  id        Int      @id @default(autoincrement())
+  partName  String   @unique
+  partDes   String?
+  syncedAt  DateTime @default(now())
+}
+
 model Approval {
   id         String   @id @default(cuid())
   requestId  String

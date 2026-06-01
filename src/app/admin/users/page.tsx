@@ -32,6 +32,8 @@ export default function UsersAdminPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'SUBMITTER' })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(data => {
@@ -90,6 +92,16 @@ export default function UsersAdminPage() {
     loadUsers()
   }
 
+  async function syncParts() {
+    setSyncing(true)
+    setSyncMsg('')
+    const res = await fetch('/api/parts/sync', { method: 'POST' })
+    const data = await res.json()
+    setSyncing(false)
+    if (!res.ok) setSyncMsg(`שגיאה: ${data.error}`)
+    else setSyncMsg(`✓ סונכרנו ${data.synced.toLocaleString()} מק"טים`)
+  }
+
   async function handleDelete(u: User) {
     if (!confirm(`למחוק את ${u.name}?`)) return
     await fetch(`/api/users/${u.id}`, { method: 'DELETE' })
@@ -110,12 +122,22 @@ export default function UsersAdminPage() {
             </button>
             <h1 className="text-2xl font-bold text-gray-900">ניהול משתמשים</h1>
           </div>
-          <button
-            onClick={openNew}
-            className="bg-blue-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-blue-700 transition-colors"
-          >
-            + משתמש חדש
-          </button>
+          <div className="flex items-center gap-3">
+            {syncMsg && <span className="text-sm text-green-700">{syncMsg}</span>}
+            <button
+              onClick={syncParts}
+              disabled={syncing}
+              className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-colors"
+            >
+              {syncing ? '⏳ מסנכרן...' : '🔄 סנכרן מק"טים מ-Priority'}
+            </button>
+            <button
+              onClick={openNew}
+              className="bg-blue-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-blue-700 transition-colors"
+            >
+              + משתמש חדש
+            </button>
+          </div>
         </div>
 
         {/* Form Modal */}

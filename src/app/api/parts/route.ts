@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/session'
-
-const PRIORITY_BASE = 'https://actelis.edpcloud.co.il/odata/Priority/tabula.ini/actil'
-const AUTH = 'Basic ' + Buffer.from('API:API').toString('base64')
 
 export async function GET(request: NextRequest) {
   const session = await getSession()
@@ -11,22 +9,19 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get('q') ?? ''
   if (q.length < 1) return NextResponse.json({ parts: [] })
 
-  const url = `${PRIORITY_BASE}/PART?$select=PARTNAME,PARTDES&$filter=startswith(PARTNAME,'${encodeURIComponent(q)}')&$top=50&$orderby=PARTNAME`
+  const parts = await prisma.part.findMany({
+    where: {
+      OR: [
+        { partName: { contains: q, mode: 'insensitive' } },
+        { partDes: { contains: q, mode: 'insensitive' } },
+      ],
+    },
+    orderBy: { partName: 'asc' },
+    take: 50,
+    select: { partName: true, partDes: true },
+  })
 
-  try {
-    const res = await fetch(url, {
-      headers: { Authorization: AUTH, Accept: 'application/json' },
-    })
-    if (!res.ok) return NextResponse.json({ error: 'Priority API error' }, { status: res.status })
-
-    const data = await res.json()
-    const parts = (data.value ?? []).map((p: { PARTNAME: string; PARTDES: string }) => ({
-      name: p.PARTNAME,
-      des: p.PARTDES,
-    }))
-    return NextResponse.json({ parts })
-  } catch (err) {
-    console.error('[parts]', err)
-    return NextResponse.json({ error: 'שגיאה בטעינת מק"טים' }, { status: 500 })
-  }
+  return NextResponse.json({
+    parts: parts.map(p => ({ name: p.partName, des: p.partDes ?? '' })),
+  })
 }
