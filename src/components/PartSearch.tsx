@@ -73,7 +73,7 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
         <span className="absolute left-2 top-1 text-xs text-gray-400">...</span>
       )}
       {open && results.length > 0 && (
-        <div className="absolute z-50 top-full mt-1 right-0 w-72 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 bottom-full mb-1 right-0 w-72 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {results.map(part => (
             <button
               key={part.name}
