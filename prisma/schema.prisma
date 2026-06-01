@@ -56,6 +56,7 @@ model Part {
   id        Int      @id @default(autoincrement())
   partName  String   @unique
   partDes   String?
+  std       Float?
   syncedAt  DateTime @default(now())
 }
 

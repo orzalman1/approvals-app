@@ -176,8 +176,8 @@ export default function NewRequestPage() {
                       <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-1 px-2 w-44">
                           <PartSearch value={item.rowLabel}
-                            onChange={(name, des) => setItems(prev => prev.map((it, idx) =>
-                              idx === i ? { ...it, rowLabel: name, partDes: des } : it))} />
+                            onChange={(name, des, std) => setItems(prev => prev.map((it, idx) =>
+                              idx === i ? { ...it, rowLabel: name, partDes: des, std: std != null ? String(std) : it.std } : it))} />
                         </td>
                         <td className="py-1 px-2 w-36">
                           <input value={item.partDes} onChange={e => updateItem(i, 'partDes', e.target.value)}

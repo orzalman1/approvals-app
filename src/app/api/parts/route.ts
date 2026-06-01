@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
   if (q.length < 1) return NextResponse.json({ parts: [] })
 
   const search = `%${q.toUpperCase()}%`
-  const parts = await prisma.$queryRaw<{ partName: string; partDes: string | null }[]>`
-    SELECT "partName", "partDes"
+  const parts = await prisma.$queryRaw<{ partName: string; partDes: string | null; std: number | null }[]>`
+    SELECT "partName", "partDes", "std"
     FROM "Part"
     WHERE UPPER("partName") LIKE ${search}
        OR UPPER("partDes")  LIKE ${search}
@@ -20,6 +20,6 @@ export async function GET(request: NextRequest) {
   `
 
   return NextResponse.json({
-    parts: parts.map(p => ({ name: p.partName, des: p.partDes ?? '' })),
+    parts: parts.map(p => ({ name: p.partName, des: p.partDes ?? '', std: p.std ?? null })),
   })
 }

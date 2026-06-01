@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-interface Part { name: string; des: string }
+interface Part { name: string; des: string; std: number | null }
 
 interface PartSearchProps {
   value: string
-  onChange: (name: string, des: string) => void
+  onChange: (name: string, des: string, std: number | null) => void
   placeholder?: string
 }
 
@@ -64,7 +64,7 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
   function select(part: Part) {
     setQuery(part.name)
     setOpen(false)
-    onChange(part.name, part.des)
+    onChange(part.name, part.des, part.std)
   }
 
   return (
@@ -73,7 +73,7 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
         <input
           ref={inputRef}
           value={query}
-          onChange={e => { setQuery(e.target.value); if (!e.target.value) onChange('', '') }}
+          onChange={e => { setQuery(e.target.value); if (!e.target.value) onChange('', '', null) }}
           className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
           placeholder={placeholder}
           dir="ltr"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/Navbar'
 import { ROLE_LABELS } from '@/lib/constants'
@@ -32,8 +32,9 @@ export default function UsersAdminPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'SUBMITTER' })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
-  const [syncing, setSyncing] = useState(false)
-  const [syncMsg, setSyncMsg] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadMsg, setUploadMsg] = useState('')
+  const partsFileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(data => {
@@ -92,14 +93,19 @@ export default function UsersAdminPage() {
     loadUsers()
   }
 
-  async function syncParts() {
-    setSyncing(true)
-    setSyncMsg('')
-    const res = await fetch('/api/parts/sync', { method: 'POST' })
+  async function handlePartsUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadMsg('')
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/parts/upload', { method: 'POST', body: formData })
     const data = await res.json()
-    setSyncing(false)
-    if (!res.ok) setSyncMsg(`שגיאה: ${data.error}`)
-    else setSyncMsg(`✓ סונכרנו ${data.synced.toLocaleString()} מק"טים`)
+    setUploading(false)
+    if (!res.ok) setUploadMsg(`שגיאה: ${data.error}`)
+    else setUploadMsg(`✓ יובאו ${data.imported.toLocaleString()} מק"טים`)
+    e.target.value = ''
   }
 
   async function handleDelete(u: User) {
@@ -123,14 +129,22 @@ export default function UsersAdminPage() {
             <h1 className="text-2xl font-bold text-gray-900">ניהול משתמשים</h1>
           </div>
           <div className="flex items-center gap-3">
-            {syncMsg && <span className="text-sm text-green-700">{syncMsg}</span>}
+            {uploadMsg && <span className="text-sm text-green-700">{uploadMsg}</span>}
             <button
-              onClick={syncParts}
-              disabled={syncing}
+              type="button"
+              onClick={() => partsFileRef.current?.click()}
+              disabled={uploading}
               className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-colors"
             >
-              {syncing ? '⏳ מסנכרן...' : '🔄 סנכרן מק"טים מ-Priority'}
+              {uploading ? '⏳ טוען...' : '📂 טען מק"טים מקובץ'}
             </button>
+            <input
+              ref={partsFileRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={handlePartsUpload}
+            />
             <button
               onClick={openNew}
               className="bg-blue-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-blue-700 transition-colors"
