@@ -11,8 +11,9 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get('q') ?? ''
   if (q.length < 1) return NextResponse.json({ parts: [] })
 
-  const filter = encodeURIComponent(`contains(PARTNAME,'${q}') or contains(PARTDES,'${q}')`)
-  const url = `${PRIORITY_BASE}/PART?$select=PARTNAME,PARTDES&$filter=${filter}&$top=50&$orderby=PARTNAME`
+  // OData v2 uses substringof() instead of contains()
+  const filter = `substringof('${q}',PARTNAME) or substringof('${q}',PARTDES)`
+  const url = `${PRIORITY_BASE}/PART?$select=PARTNAME,PARTDES&$filter=${encodeURIComponent(filter)}&$top=50&$orderby=PARTNAME`
 
   try {
     const res = await fetch(url, {
