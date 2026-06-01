@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    // SUBMITTER | PROCUREMENT | SUBCONTRACT_MANAGER | COO
+  createdAt    DateTime  @default(now())
+
+  submittedRequests Request[]  @relation("SubmittedBy")
+  approvals         Approval[]
+}
+
+model Request {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  status        String   @default("PENDING_PROCUREMENT")
+  submittedBy   User     @relation("SubmittedBy", fields: [submittedById], references: [id])
+  submittedById String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items     RequestItem[]
+  approvals Approval[]
+}
+
+model RequestItem {
+  id            String  @id @default(cuid())
+  requestId     String
+  request       Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  rowLabel      String?
+  requiredDate  String?
+  requiredQty   Float?
+  std           Float?
+  mfgPartNumber String?
+  manufacturer  String?
+  supplier      String?
+  purchaseQty   Float?
+  purchasePrice Float?
+  ppv           Float?
+  excess        Float?
+  itemStatus    String?
+  parentPart    String?
+  notes         String?
+}
+
+model Approval {
+  id         String   @id @default(cuid())
+  requestId  String
+  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approverId String
+  approver   User     @relation(fields: [approverId], references: [id])
+  stage      String   // PROCUREMENT | SUBCONTRACT_MANAGER | COO
+  action     String   // APPROVED | REJECTED
+  comment    String?
+  createdAt  DateTime @default(now())
+}
