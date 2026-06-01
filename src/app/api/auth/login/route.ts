@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     })
-  } catch {
+  } catch (err) {
+    console.error('[login] error:', err)
     return NextResponse.json({ error: 'שגיאת שרת' }, { status: 500 })
   }
 }
