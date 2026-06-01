@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-interface Part {
-  name: string
-  des: string
-}
+interface Part { name: string; des: string }
 
 interface PartSearchProps {
   value: string
@@ -18,24 +15,34 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
   const [results, setResults] = useState<Part[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
+  const inputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    setQuery(value)
-  }, [value])
+  useEffect(() => { setQuery(value) }, [value])
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
-    if (query.length < 1) { setResults([]); return }
+    if (query.length < 1) { setResults([]); setOpen(false); return }
 
     timerRef.current = setTimeout(async () => {
       setLoading(true)
       try {
         const res = await fetch(`/api/parts?q=${encodeURIComponent(query)}`)
         const data = await res.json()
-        setResults(data.parts ?? [])
-        setOpen(true)
+        const parts = data.parts ?? []
+        setResults(parts)
+        if (parts.length > 0 && inputRef.current) {
+          const rect = inputRef.current.getBoundingClientRect()
+          setDropdownStyle({
+            position: 'fixed',
+            top: rect.bottom + 4,
+            left: rect.left,
+            width: Math.max(rect.width, 280),
+            zIndex: 9999,
+          })
+          setOpen(true)
+        }
       } finally {
         setLoading(false)
       }
@@ -43,11 +50,7 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
   }, [query])
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
+    function handleClick() { setOpen(false) }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
@@ -59,26 +62,31 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
   }
 
   return (
-    <div ref={containerRef} className="relative">
-      <input
-        value={query}
-        onChange={e => { setQuery(e.target.value); if (!e.target.value) onChange('', '') }}
-        onFocus={() => results.length > 0 && setOpen(true)}
-        className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-        placeholder={placeholder}
-        dir="ltr"
-        autoComplete="off"
-      />
-      {loading && (
-        <span className="absolute left-2 top-1 text-xs text-gray-400">...</span>
-      )}
+    <>
+      <div className="relative">
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={e => { setQuery(e.target.value); if (!e.target.value) onChange('', '') }}
+          className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+          placeholder={placeholder}
+          dir="ltr"
+          autoComplete="off"
+        />
+        {loading && <span className="absolute left-2 top-1 text-xs text-gray-400">...</span>}
+      </div>
+
       {open && results.length > 0 && (
-        <div className="absolute z-50 bottom-full mb-1 right-0 w-72 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div
+          style={dropdownStyle}
+          className="bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto"
+          onMouseDown={e => e.preventDefault()}
+        >
           {results.map(part => (
             <button
               key={part.name}
               type="button"
-              onMouseDown={() => select(part)}
+              onClick={() => select(part)}
               className="w-full text-right px-3 py-2 hover:bg-blue-50 border-b border-gray-100 last:border-0"
             >
               <p className="text-xs font-mono font-medium text-gray-900">{part.name}</p>
@@ -87,6 +95,6 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
           ))}
         </div>
       )}
-    </div>
+    </>
   )
 }
