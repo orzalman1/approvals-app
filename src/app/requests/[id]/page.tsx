@@ -108,7 +108,11 @@ export default function RequestDetailPage() {
   if (!user || loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">טוען...</div>
   if (!request) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">בקשה לא נמצאה</div>
 
-  const canApprove = user.role !== 'SUBMITTER' && request.status === STAGE_FOR_ROLE[user.role]
+  const isActive = !['APPROVED', 'REJECTED'].includes(request.status)
+  const canApprove =
+    isActive &&
+    (user.role === 'ADMIN' ||
+      (user.role !== 'SUBMITTER' && request.status === STAGE_FOR_ROLE[user.role]))
 
   const WORKFLOW_STAGES = [
     { key: 'PENDING_PROCUREMENT', label: 'אישור רכש', stageKey: 'PROCUREMENT' },

@@ -1,4 +1,5 @@
 export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'מנהל מערכת',
   SUBMITTER: 'מגיש',
   PROCUREMENT: 'רכש',
   SUBCONTRACT_MANAGER: 'מנהל קבלני משנה',

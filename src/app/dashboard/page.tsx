@@ -47,6 +47,7 @@ export default function DashboardPage() {
 
   const pendingMyApproval = requests.filter(r => {
     if (user.role === 'SUBMITTER') return false
+    if (user.role === 'ADMIN') return !['APPROVED', 'REJECTED'].includes(r.status)
     return r.status === STAGE_FOR_ROLE[user.role]
   })
 

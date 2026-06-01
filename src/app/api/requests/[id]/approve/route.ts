@@ -37,9 +37,16 @@ export async function POST(
   const req = await prisma.request.findUnique({ where: { id } })
   if (!req) return NextResponse.json({ error: 'לא נמצא' }, { status: 404 })
 
-  const expectedStatus = STAGE_FOR_ROLE[role]
-  if (req.status !== expectedStatus) {
-    return NextResponse.json({ error: 'הבקשה אינה בשלב שלך לאישור' }, { status: 400 })
+  // ADMIN can approve at any stage; others only at their stage
+  if (role !== 'ADMIN') {
+    const expectedStatus = STAGE_FOR_ROLE[role]
+    if (req.status !== expectedStatus) {
+      return NextResponse.json({ error: 'הבקשה אינה בשלב שלך לאישור' }, { status: 400 })
+    }
+  }
+
+  if (['APPROVED', 'REJECTED'].includes(req.status)) {
+    return NextResponse.json({ error: 'הבקשה כבר טופלה' }, { status: 400 })
   }
 
   const newStatus = action === 'REJECTED' ? 'REJECTED' : NEXT_STATUS[req.status]
