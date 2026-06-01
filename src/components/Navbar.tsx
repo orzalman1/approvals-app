@@ -18,11 +18,21 @@ export function Navbar({ user }: NavbarProps) {
 
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-          <span className="text-white text-sm font-bold">א</span>
-        </div>
-        <span className="font-bold text-gray-900 text-lg">מערכת אישורים</span>
+      <div className="flex items-center gap-4">
+        <button onClick={() => router.push('/dashboard')} className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm font-bold">א</span>
+          </div>
+          <span className="font-bold text-gray-900 text-lg">מערכת אישורים</span>
+        </button>
+        {user.role === 'ADMIN' && (
+          <button
+            onClick={() => router.push('/admin/users')}
+            className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            ניהול משתמשים
+          </button>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
