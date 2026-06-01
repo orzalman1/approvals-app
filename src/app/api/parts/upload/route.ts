@@ -58,10 +58,9 @@ export async function POST(request: NextRequest) {
   const descs = parts.map(p => p.partDes ?? '')
   const stds  = parts.map(p => p.std ?? 0)
 
-  // Atomic: truncate + bulk insert in one transaction
-  await prisma.$transaction([
-    prisma.$executeRaw`TRUNCATE TABLE "Part" RESTART IDENTITY`,
-    prisma.$executeRaw`
+  try {
+    await prisma.$executeRaw`TRUNCATE TABLE "Part" RESTART IDENTITY`
+    await prisma.$executeRaw`
       INSERT INTO "Part" ("partName", "partDes", "std")
       SELECT u.name, NULLIF(u.des, ''), NULLIF(u.std, 0)
       FROM unnest(
@@ -69,8 +68,11 @@ export async function POST(request: NextRequest) {
         ${descs}::text[],
         ${stds}::float8[]
       ) AS u(name, des, std)
-    `,
-  ])
+    `
+  } catch (err) {
+    console.error('[parts/upload] DB error:', err)
+    return NextResponse.json({ error: 'שגיאה בשמירת מק"טים' }, { status: 500 })
+  }
 
   return NextResponse.json({ imported: parts.length })
 }
