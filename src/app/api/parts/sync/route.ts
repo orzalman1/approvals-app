@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+
+export const maxDuration = 60 // seconds (Vercel Hobby max)
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/session'
 
