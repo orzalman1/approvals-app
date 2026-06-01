@@ -54,9 +54,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'לא נמצאו שורות עם מק"ט' }, { status: 400 })
   }
 
-  // Truncate + bulk insert
+  const names = parts.map(p => p.partName)
+  const descs = parts.map(p => p.partDes ?? '')
+  const stds  = parts.map(p => p.std ?? 0)
+
+  // Single-query bulk upsert via unnest arrays (fastest PostgreSQL bulk method)
   await prisma.$executeRaw`TRUNCATE TABLE "Part" RESTART IDENTITY`
-  await prisma.part.createMany({ data: parts })
+  await prisma.$executeRaw`
+    INSERT INTO "Part" ("partName", "partDes", "std")
+    SELECT u.name, NULLIF(u.des, ''), NULLIF(u.std, 0)
+    FROM unnest(
+      ${names}::text[],
+      ${descs}::text[],
+      ${stds}::float8[]
+    ) AS u(name, des, std)
+  `
 
   return NextResponse.json({ imported: parts.length })
 }
