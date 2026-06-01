@@ -49,8 +49,14 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
     }, 300)
   }, [query])
 
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    function handleClick() { setOpen(false) }
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current?.contains(e.target as Node)) return
+      if (inputRef.current?.contains(e.target as Node)) return
+      setOpen(false)
+    }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
@@ -78,9 +84,9 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
 
       {open && results.length > 0 && (
         <div
+          ref={dropdownRef}
           style={dropdownStyle}
           className="bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto"
-          onMouseDown={e => e.preventDefault()}
         >
           {results.map(part => (
             <button
