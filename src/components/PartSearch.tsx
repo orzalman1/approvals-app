@@ -67,6 +67,20 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
     onChange(part.name, part.des, part.std)
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Tab' && open && results.length > 0) {
+      e.preventDefault()
+      select(results[0])
+      // Move focus to next input after selection
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLElement>('input, select, textarea, button[tabindex]')
+        const idx = Array.from(inputs).indexOf(inputRef.current!)
+        if (idx >= 0 && inputs[idx + 1]) inputs[idx + 1].focus()
+      }, 0)
+    }
+    if (e.key === 'Escape') setOpen(false)
+  }
+
   return (
     <>
       <div className="relative">
@@ -74,6 +88,7 @@ export function PartSearch({ value, onChange, placeholder = 'חפש מק"ט...' 
           ref={inputRef}
           value={query}
           onChange={e => { setQuery(e.target.value); if (!e.target.value) onChange('', '', null) }}
+          onKeyDown={handleKeyDown}
           className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
           placeholder={placeholder}
           dir="ltr"
