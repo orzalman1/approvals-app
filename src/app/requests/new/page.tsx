@@ -24,10 +24,10 @@ const EMPTY_ITEM: Item = {
   itemStatus: '', notes: '',
 }
 
-function calcPPV(std: string, price: string): string {
-  const s = parseFloat(std), p = parseFloat(price)
-  if (isNaN(s) || isNaN(p)) return ''
-  return (s - p).toFixed(2)
+function calcPPV(std: string, price: string, purchaseQty: string): string {
+  const s = parseFloat(std), p = parseFloat(price), q = parseFloat(purchaseQty)
+  if (isNaN(s) || isNaN(p) || isNaN(q)) return ''
+  return ((p - s) * q).toFixed(2)
 }
 
 function calcExcess(purchaseQty: string, requiredQty: string, std: string): string {
@@ -98,7 +98,7 @@ export default function NewRequestPage() {
           supplier: i.supplier,
           purchaseQty: i.purchaseQty,
           purchasePrice: i.purchasePrice,
-          ppv: calcPPV(i.std, i.purchasePrice),
+          ppv: calcPPV(i.std, i.purchasePrice, i.purchaseQty),
           excess: calcExcess(i.purchaseQty, i.requiredQty, i.std),
           itemStatus: i.itemStatus,
         })),
@@ -154,9 +154,9 @@ export default function NewRequestPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 text-gray-600 text-xs">
-                    <th className="text-right py-2 px-2 font-medium">מק"ט</th>
-                    <th className="text-right py-2 px-2 font-medium">תיאור</th>
-                    <th className="text-right py-2 px-2 font-medium">תאריך נדרש</th>
+                    <th className="text-right py-2 px-2 font-medium w-40">מק"ט</th>
+                    <th className="text-right py-2 px-2 font-medium w-56">תיאור</th>
+                    <th className="text-right py-2 px-2 font-medium w-32">תאריך נדרש</th>
                     <th className="text-right py-2 px-2 font-medium">כמות נדרשת</th>
                     <th className="text-right py-2 px-2 font-medium">STD</th>
                     <th className="text-right py-2 px-2 font-medium">ספק</th>
@@ -170,7 +170,7 @@ export default function NewRequestPage() {
                 </thead>
                 <tbody>
                   {items.map((item, i) => {
-                    const ppv = calcPPV(item.std, item.purchasePrice)
+                    const ppv = calcPPV(item.std, item.purchasePrice, item.purchaseQty)
                     const excess = calcExcess(item.purchaseQty, item.requiredQty, item.std)
                     return (
                       <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
@@ -179,13 +179,13 @@ export default function NewRequestPage() {
                             onChange={(name, des, std) => setItems(prev => prev.map((it, idx) =>
                               idx === i ? { ...it, rowLabel: name, partDes: des, std: std != null ? String(std) : it.std } : it))} />
                         </td>
-                        <td className="py-1 px-2 w-36">
+                        <td className="py-1 px-2 w-56">
                           <input value={item.partDes} onChange={e => updateItem(i, 'partDes', e.target.value)}
-                            className={inputCls} placeholder="תיאור" />
+                            className={inputCls} placeholder="תיאור" title={item.partDes} />
                         </td>
-                        <td className="py-1 px-2 w-24">
-                          <input value={item.requiredDate} onChange={e => updateItem(i, 'requiredDate', e.target.value)}
-                            className={inputCls} placeholder="DD/MM/YY" />
+                        <td className="py-1 px-2 w-32">
+                          <input type="date" value={item.requiredDate} onChange={e => updateItem(i, 'requiredDate', e.target.value)}
+                            className={inputCls} />
                         </td>
                         <td className="py-1 px-2 w-20">
                           <input type="number" value={item.requiredQty} onChange={e => updateItem(i, 'requiredQty', e.target.value)}
